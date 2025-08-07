@@ -1,0 +1,21 @@
+{
+  "name": "@prisma-psm/pg",
+  "version": "1.0.2",
+  "description": "Prisma Safe Migration Postgres Driver",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma-psm/core": "^1.0.2",
+    "pg": "^8.16.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.5"
+  }
+}
