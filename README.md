@@ -1,0 +1,2 @@
+# psm-pg
+PSM/PG - Prisma SAFE MIGRATE FOR POSTGRES DRIVER
