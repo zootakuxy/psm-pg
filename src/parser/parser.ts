@@ -36,12 +36,12 @@ export function parser( opts:PostgresParserOptions){
     }
 
     opts.models.forEach( (model, index) => {
-        model.temp = `temp_${index}_${model.name}`;
 
         schemas.add( model.schema )
 
         if( model.psm?.view ) return;
-        model.indexes = opts.indexes.filter( value => value.model === model.name );
+        model.indexes = opts.indexes.filter( value => value.model === model.model );
+
         const modelDDL = modelParser( model, opts );
         const parsed:ParseModelResult = {
             model: model,
@@ -72,9 +72,9 @@ export function parser( opts:PostgresParserOptions){
         if( opts.mode === "migrate" ){
             parsed.table.drop.push( ...modelDDL.drop_table());
             parsed.table.allocate.push( ...modelDDL.allocate_table());
-            parsed.primary.drop.push(...modelDDL.drop_primary_keys());
             parsed.foreign.drop.push( ...modelDDL.drop_foreign_key());
             parsed.unique.drop.push( ...modelDDL.drop_unique_key());
+            parsed.primary.drop.push(...modelDDL.drop_primary_keys());
             parsed.indexes.drop.push( ...modelDDL.drop_index_key());
         }
 

@@ -2,7 +2,7 @@ import {MigrationOptions, PSMMigrationResult} from "@prisma-psm/core";
 import { Client, Query } from 'pg'
 
 
-export function migrationTest( opts:MigrationOptions ):Promise<PSMMigrationResult>{
+export function migrate(opts:MigrationOptions ):Promise<PSMMigrationResult>{
     return new Promise( (resolve, reject) => {
         const response:PSMMigrationResult = {
             messages: []
@@ -17,8 +17,8 @@ export function migrationTest( opts:MigrationOptions ):Promise<PSMMigrationResul
             const query = new Query( opts.sql );
             query.on( "error", err => {
                 response.error = err;
-                response.messages?.push( `TESTE migration failed: ${err.message}` );
-                console.error( "TESTE migration failed", err)
+                response.messages?.push( `${opts.label} migration failed: ${err.message}` );
+                console.error( `${opts.label} migration failed`, err)
                 client.end( err1 => { });
                 resolve( response );
             });

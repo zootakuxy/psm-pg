@@ -1,7 +1,7 @@
 import {sql} from "./parser/sql";
 import {PSMDriver, ModelOptions} from "@prisma-psm/core";
 import {parser} from "./parser/parser";
-import {migrationTest} from "./migration/test";
+import {migrate} from "./migration";
 
 
 
@@ -11,8 +11,8 @@ function prepare( model:ModelOptions ){
 }
 const driver :PSMDriver = {
     migrator: opts => ({
-        migrate: () => migrationTest({ sql: opts.migrate, url: opts.url }),
-        test: () => migrationTest({ sql: opts.check, url: opts.url }),
+        migrate: () => migrate({ sql: opts.migrate, url: opts.url, label: "NEXT" }),
+        test: () => migrate({ sql: opts.check, url: opts.url, label: "TEST" }),
     }),
     generator: opts => ({
         migrate: () => sql(parser({ ...opts, mode: "migrate"})),

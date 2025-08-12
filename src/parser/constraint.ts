@@ -26,6 +26,7 @@ function resolver(parser:PostgresParserOptions, opts:ConstraintsOptions){
     if(!!opts.refModel) refModel = oid(opts.refModel);
     if(!!opts.refModelSchema) refModelSchema = oid(opts.refModelSchema);
 
+
     return {
         create_primary:()=> ([
             notice( `CREATE PRIMARY KEY ${name} OF MODEL ${opts.model.model}`),
@@ -44,7 +45,7 @@ function resolver(parser:PostgresParserOptions, opts:ConstraintsOptions){
         ]),
         drop:()=> ([
             notice( `DROP CONSTRAINT KEY ${name} OF MODEL ${ opts.model.model}`),
-            `alter table if exists ${oid(opts.model.schema)}.${oid(opts.model.name)} drop constraint if exists ${name};`,
+            `alter table if exists ${oid(opts.model.schema)}.${oid(opts.model.name)} drop constraint if exists ${name} cascade;`,
             notice( `DROP CONSTRAINT KEY ${name} OF MODEL ${ opts.model.model} OK!`),
         ]),
     }
@@ -61,6 +62,7 @@ export function constraintsParser( model:ModelOptions, parser:PostgresParserOpti
         });
         let name = index.dbName || index.name;
         if( !name ) name = `pk_${model.name}_${ localField.join( "_" )}_by_prisma`;
+
         return resolver(parser, {
             key: "primary",
             fields: localField,
@@ -110,11 +112,12 @@ export function constraintsParser( model:ModelOptions, parser:PostgresParserOpti
             return field.dbName||field.name;
         });
 
-
-
         let name = next.relationName;
-        let ref = reference?.name;
+        let ref = reference?.temp;
         if( !name ) name = `fk_${model.name}_${referenceField?.join("_")}_to_${ref}_by_prisma`;
+
+
+        let refModelSchema = parser.shadow;
 
         return resolver( parser, {
             key: "foreign",
@@ -122,7 +125,7 @@ export function constraintsParser( model:ModelOptions, parser:PostgresParserOpti
             name: name,
             refModel: ref,
             refFields: referenceField,
-            refModelSchema: reference?.schema || "public",
+            refModelSchema: refModelSchema,
             parser: parser,
             model: model,
         });
@@ -139,7 +142,8 @@ export function constraintsParser( model:ModelOptions, parser:PostgresParserOpti
     }
     return {
         create_primary_keys: ()=> {
-            return maps( [primary], "create_primary" );
+            const  lll = maps( [primary], "create_primary" );
+            return lll;
         },
         drop_primary_keys: ()=> {
             return maps( [primary], "drop" );

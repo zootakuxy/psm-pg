@@ -47,7 +47,8 @@ export function sql(response: ParserResult ) {
     //Drops
     parsed.filter( value => !!value.foreign.drop.length ).forEach( value => {
         commands.push( ...value.foreign.drop );
-    })
+    });
+
     parsed.filter( value => !!value.unique.drop.length ).forEach( value => {
         commands.push( ...value.unique.drop );
     })

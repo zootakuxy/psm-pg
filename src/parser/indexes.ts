@@ -19,7 +19,7 @@ function resolver(parser:PostgresParserOptions, opts:IndexesOptions){
 
     return {
         create_index:()=> `create index ${name} on ${oid(parser.shadow)}.${oid(opts.model.temp)}${algorithm} (${fieldsId});`,
-        drop_index:()=> `drop index if exists ${name};`,
+        drop_index:()=> `drop index if exists ${name} cascade;`,
     }
 }
 
