@@ -2,9 +2,9 @@ import {FieldOption, ModelOptions} from "@prisma-psm/core";
 import {oid, val} from "../../utils/escape";
 import { noTab } from "../../utils/tabs";
 import { PostgresParserOptions } from "../def";
+import {notice} from "../notice";
 import {createRevision} from "../sys";
 import {migrationHash} from "../../utils/sha";
-import {notice} from "../notice";
 
 export function createFunctionRestoreSerial( opts: PostgresParserOptions) {
     const sys = oid( opts.sys);
@@ -51,15 +51,15 @@ export interface RestoreOptions{
     parser:PostgresParserOptions
 }
 
-export function restoreBackupSQL(opts:RestoreOptions ): string[] {
+export function restoreBackupSQL(opts:RestoreOptions ): {
+    data:string[]
+    registry:string[]
+}{
     const schema =  oid(opts.model.schema);
     const source =  oid(opts.source);
     const shadow =  oid(opts.parser.shadow);
     const table =   oid(opts.model.name);
     const temp =    oid(opts.model.temp);
-
-
-
 
     if( opts.model.psm?.backup?.skip ) return null as any;
 
@@ -150,13 +150,6 @@ export function restoreBackupSQL(opts:RestoreOptions ): string[] {
           else 
             raise exception 'cannot restore revision';
           end if;
-          
-          ${ createRevision( opts.parser, {
-        revision: opts.model.psm?.backup?.rev?.version,
-        relation: relation,
-        hash: migrationHash( opts.parser.migration, `restore:data-${relation}`),
-        operation: `restore:data-${relation}`
-    }).join("\n")}
         end;
       $$;
     `.split("\n")
@@ -167,11 +160,23 @@ export function restoreBackupSQL(opts:RestoreOptions ): string[] {
         })
         .join("\n");
 
-    return [
-        notice( `CREATE BACKUP FOR MODEL ${opts.model.model}` ),
-        next,
-        notice( `CREATE BACKUP FOR MODEL ${opts.model.model} OK` ),
-    ]
+    return {
+        data: [
+            notice( `RESTORE BACKUP FOR MODEL ${opts.model.model}` ),
+            next,
+            notice( `RESTORE BACKUP FOR MODEL ${opts.model.model} OK` ),
+        ],
+        registry: [
+            notice( `REGISTRY RESTORE OF BACKUP FOR MODEL ${opts.model.model}` ),
+            createRevision( opts.parser, {
+                revision: opts.model.psm?.backup?.rev?.version,
+                relation: relation,
+                hash: migrationHash( opts.parser.migration, `restore:data-${relation}`),
+                operation: `restore:data-${relation}`
+            }).join("\n"),
+            notice( `REGISTRY RESTORE OF BACKUP FOR MODEL ${opts.model.model} OK` ),
+        ],
+    }
 }
 
 export interface RestoreSerialOptions extends RestoreOptions {

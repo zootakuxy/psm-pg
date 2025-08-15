@@ -23,7 +23,6 @@ export function prepareCore( opts:PostgresParserOptions ){
     ], tab)
 }
 export function createMigration( opts:PostgresParserOptions ){
-    if( opts.mode === "check" ) return [];
     const sys = oid( opts.sys );
     const migration = val( opts.migration );
     const tab = "         ";
@@ -39,7 +38,6 @@ export interface OperationOptions {
     revision?: string
 }
 export function createRevision(opts:PostgresParserOptions, operation:OperationOptions ){
-    if( opts.mode === "check" ) return [];
     const sys = oid( opts.sys );
     const tab = "         ";
     operation = { ...operation, migration_sid: opts.migration } as any;

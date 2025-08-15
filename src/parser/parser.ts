@@ -11,7 +11,11 @@ import {ParseModelResult, PostgresParserOptions} from "./def";
 export interface ParserResult {
     options:PostgresParserOptions
     models: string[],
-    core: string[]
+    core: {
+        structure:string[]
+        functions:string[]
+        migration:string[]
+    }
     shadow: { create:string[],  drop:string[] },
     parsed: {
         [p:string]:ParseModelResult
@@ -24,11 +28,11 @@ export function parser( opts:PostgresParserOptions){
         options: opts,
         parsed:{},
         models:[],
-        core:[
-            ...prepareCore(opts),
-            ...createMigration(opts),
-            ...createFunctionRestoreSerial(opts)
-        ],
+        core: {
+            structure: prepareCore(opts),
+            functions: createFunctionRestoreSerial(opts),
+            migration: createMigration(opts),
+        },
         shadow:{
             create: [...create_shadow( opts )],
             drop: [...drop_shadow( opts )],
@@ -45,7 +49,7 @@ export function parser( opts:PostgresParserOptions){
         const modelDDL = modelParser( model, opts );
         const parsed:ParseModelResult = {
             model: model,
-            backup:{ create:[], restore:[], restore_serial:[], clean:[] },
+            backup:{ create:[], restore:null, restore_serial:[], clean:[] },
             table:{ create:[], drop:[], allocate:[]},
             primary:{ create:[], drop:[] },
             foreign:{ create:[], drop:[] },
@@ -59,7 +63,7 @@ export function parser( opts:PostgresParserOptions){
         if( model.psm?.backup?.skip ) backup = false;
 
         if( backup ){
-            parsed.backup.restore.push( ...modelDDL.restore_backup() );
+            parsed.backup.restore = modelDDL.restore_backup();
             parsed.backup.restore_serial.push( ...modelDDL.restore_serial());
         }
 
@@ -69,14 +73,13 @@ export function parser( opts:PostgresParserOptions){
         parsed.unique.create.push( ...modelDDL.create_unique_key());
         parsed.indexes.create.push( ...modelDDL.create_index_key());
 
-        if( opts.mode === "migrate" ){
-            parsed.table.drop.push( ...modelDDL.drop_table());
-            parsed.table.allocate.push( ...modelDDL.allocate_table());
-            parsed.foreign.drop.push( ...modelDDL.drop_foreign_key());
-            parsed.unique.drop.push( ...modelDDL.drop_unique_key());
-            parsed.primary.drop.push(...modelDDL.drop_primary_keys());
-            parsed.indexes.drop.push( ...modelDDL.drop_index_key());
-        }
+        parsed.table.drop.push( ...modelDDL.drop_table());
+        parsed.table.allocate.push( ...modelDDL.allocate_table());
+        parsed.foreign.drop.push( ...modelDDL.drop_foreign_key());
+        parsed.unique.drop.push( ...modelDDL.drop_unique_key());
+        parsed.primary.drop.push(...modelDDL.drop_primary_keys());
+        parsed.indexes.drop.push( ...modelDDL.drop_index_key());
+
 
         parsed.dependencies.push( ...modelDDL.depends());
         response.parsed[model.name] = parsed;
